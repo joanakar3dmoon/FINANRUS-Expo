@@ -29,17 +29,38 @@ jobs:
       - name: Grant execute permission
         run: chmod +x android/gradlew
 
+      - name: Generate release keystore
+        run: |
+          keytool -genkeypair -v -keystore $GITHUB_WORKSPACE/finanrus.keystore -alias finanrus -keyalg RSA -keysize 2048 -validity 10000 -storepass r3dmoon2026 -keypass r3dmoon2026 -dname "CN=Joan, OU=Dev, O=FINANRUS, L=Barcelona, ST=BCN, C=ES"
+
       - name: Build Release APK
         working-directory: android
-        run: ./gradlew assembleRelease
-        env:
-          STORE_PASSWORD: android
-          KEY_PASSWORD: android
-          KEYSTORE_PATH: ${{ github.workspace }}/android/app/debug.keystore
-          KEY_ALIAS: androiddebugkey
+        run: |
+          export STORE_PASSWORD=r3dmoon2026
+          export KEY_PASSWORD=r3dmoon2026
+          export KEY_ALIAS=finanrus
+          export KEYSTORE_PATH=$GITHUB_WORKSPACE/finanrus.keystore
+          ./gradlew assembleRelease
+
+      - name: Force sign APK (jarsigner)
+        run: |
+          APK=$(find android/app/build/outputs/apk/release/ -name "*.apk" | head -1)
+          echo "Signing APK: $APK"
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
+            -keystore $GITHUB_WORKSPACE/finanrus.keystore \
+            -storepass r3dmoon2026 -keypass r3dmoon2026 \
+            "$APK" finanrus
+          jarsigner -verify -certs "$APK"
+
+      - name: Zipalign APK
+        run: |
+          APK=$(find android/app/build/outputs/apk/release/ -name "*.apk" | head -1)
+          ALIGNED=${APK%.apk}-aligned.apk
+          $ANDROID_HOME/build-tools/34.0.0/zipalign -v -p 4 "$APK" "$ALIGNED"
+          mv "$ALIGNED" "$APK"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: FINANRUS-APK
+          name: FINANRUS-APK-FIRMADO
           path: android/app/build/outputs/apk/release/*.apk
