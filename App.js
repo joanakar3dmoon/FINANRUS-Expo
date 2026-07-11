@@ -3,18 +3,27 @@ import { View, Text, Button, TextInput, Alert, StyleSheet, ScrollView, Touchable
 import { BannerAd, BannerAdSize, TestIds, InterstitialAd, AdEventType, RewardedAd, RewardedAdEventType } from 'react-native-google-mobile-ads';
 import axios from 'axios';
 
+import SECRET_CONFIG from './config';
+
 // ============ 🔑 CONFIG — APIs GRATIS ============
 const CONFIG = {
   // 🆓 OpenRouter gratis — 200 req/día sin tarjeta
-  OPENAI_KEY: "sk-or-v1-",  // <-- REGÍSTRATE en https://openrouter.ai/keys y pega tu key aquí
+  OPENAI_KEY: SECRET_CONFIG.OPENAI_KEY || "sk-or-v1-TU_KEY",
   OPENAI_URL: "https://openrouter.ai/api/v1",
   MODELO: "nvidia/nemotron-3-ultra-550b-a55b:free",  // 🆓 1M contexto, gratis
 
-  ADMOB_BANNER: TestIds.BANNER,
-  ADMOB_INTERSTICIAL: TestIds.INTERSTITIAL,
-  ADMOB_REWARDED: TestIds.REWARDED,
+  // 🆓 Gemini fallback
+  GEMINI_KEY: SECRET_CONFIG.GEMINI_KEY || "AIzaSyTU_KEY",
+  GEMINI_URL: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
+
+  // ANUNCIOS — ⚠️ TEST IDs (cámbialos en config.js)
+  ADMOB_BANNER: "ca-app-pub-3940256099942544/6300978111",
+  ADMOB_INTERSTICIAL: "ca-app-pub-3940256099942544/1033173712",
+  ADMOB_REWARDED: "ca-app-pub-3940256099942544/5224354917",
+
   PAYPAL_EMAIL: "joanlazaro83@gmail.com",
-  BACKEND_URL: "https://finanrus-backend.up.railway.app", // Cámbialo cuando subas el backend
+  PAYPAL_CLIENT_ID: SECRET_CONFIG.PAYPAL_CLIENT_ID || "BAAMzxgBPbp7RG7SlZEOoz1-Wku9akVCrEH6kcwGLhKqpC-VHtcc_IRYBtJF4znmTg80iJIwWul7WDCp4o",
+  BACKEND_URL: "https://finanrus-backend.up.railway.app",
   AMAZON_TAG: "r3dm01-21",
 };
 
@@ -49,22 +58,34 @@ export default function App() {
     if (!chat.trim()) return;
     setLoading(true);
     try {
-      const res = await axios.post(
-        `${CONFIG.OPENAI_URL}/chat/completions`,
-        {
-          model: CONFIG.MODELO,
-          messages: [
-            { role: "system", content: "Eres FINANRUS, un asistente financiero que ayuda a gestionar ingresos, retiros y suscripciones. Responde breve y útil." },
-            { role: "user", content: chat }
-          ]
-        },
-        { headers: { Authorization: `Bearer ${CONFIG.OPENAI_KEY}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://finanrus.app', 'X-Title': 'FINANRUS' } }
-      );
-      setRespuesta(res.data.choices[0].message.content);
+      // 🔄 INTENTO #1: OpenRouter (gratis, 200 req/día)
+      try {
+        const res = await axios.post(
+          `${CONFIG.OPENAI_URL}/chat/completions`,
+          {
+            model: CONFIG.MODELO,
+            messages: [
+              { role: "system", content: "Eres FINANRUS, un asistente financiero que ayuda a gestionar ingresos, retiros y suscripciones. Responde breve y útil." },
+              { role: "user", content: chat }
+            ]
+          },
+          { headers: { Authorization: `Bearer ${CONFIG.OPENAI_KEY}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://finanrus.app', 'X-Title': 'FINANRUS' } }
+        );
+        setRespuesta(res.data.choices[0].message.content);
+      } catch (e1) {
+        // 🔄 FALLBACK #2: Gemini (si OpenRouter falla por límite)
+        try {
+          const res2 = await axios.post(
+            `${CONFIG.GEMINI_URL}?key=${CONFIG.GEMINI_KEY}`,
+            { contents: [{ parts: [{ text: `Eres FINANRUS, un asistente financiero. Responde breve y útil. ${chat}` }] }] }
+          );
+          const texto = res2.data?.candidates?.[0]?.content?.parts?.[0]?.text || "Lo siento, no pude procesar eso.";
+          setRespuesta(texto);
+        } catch (e2) {
+          setRespuesta("❌ APIs agotadas por hoy. Límite OpenRouter (200/día) y Gemini alcanzado. Vuelve mañana o hazte premium.");
+        }
+      }
       contarAccion();
-    } catch (e) {
-      setRespuesta("Error al conectar con el agente. Revisa tu API Key.");
-    }
     setLoading(false);
   };
 

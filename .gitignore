@@ -1,0 +1,17 @@
+# 🔐 Secretos — nunca subir a GitHub
+config.js
+config.secret.js
+*.key
+.env
+.env.local
+.env.production
+
+# Node
+node_modules/
+.expo/
+dist/
+npm-debug.*
+
+# OS
+.DS_Store
+Thumbs.db
