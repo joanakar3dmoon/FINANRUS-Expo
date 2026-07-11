@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Button, TextInput, Alert, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, Button, TextInput, Alert, StyleSheet, ScrollView, TouchableOpacity, Image, Linking } from 'react-native';
 import { BannerAd, BannerAdSize, TestIds, InterstitialAd, AdEventType, RewardedAd, RewardedAdEventType } from 'react-native-google-mobile-ads';
 import axios from 'axios';
 
@@ -15,7 +15,21 @@ const CONFIG = {
   ADMOB_REWARDED: TestIds.REWARDED,
   PAYPAL_EMAIL: "joanlazaro83@gmail.com",
   BACKEND_URL: "https://finanrus-backend.up.railway.app", // Cámbialo cuando subas el backend
+  AMAZON_TAG: "r3dm01-21",
 };
+
+// ============ 📚 AFILIADOS AMAZON (tag: r3dm01-21) ============
+const AFILIADOS = [
+  { asin: "8423439062", titulo: "Hazlo bien con tus inversiones", precio: "20,85€", rating: 4.9, img: "https://m.media-amazon.com/images/I/51PsHygbU+L._AC_UL320_.jpg" },
+  { asin: "8423440737", titulo: "Educación financiera para la vida real", precio: "20,85€", rating: 4.4, img: "https://m.media-amazon.com/images/I/610kr0uswPL._AC_UL320_.jpg" },
+  { asin: "B08Q6M7Q3R", titulo: "Inversión: Claves para libertad financiera", precio: "18,71€", rating: 4.7, img: "https://m.media-amazon.com/images/I/61qAdpPwLYL._AC_UL320_.jpg" },
+  { asin: "8423425401", titulo: "El pequeño libro para invertir (Bogle)", precio: "17,05€", rating: 4.5, img: "https://m.media-amazon.com/images/I/51EoCpvVA0L._AC_UL320_.jpg" },
+  { asin: "1517011906", titulo: "Independízate de Papá Estado", precio: "13,99€", rating: 4.5, img: "https://m.media-amazon.com/images/I/613AORfuL5L._AC_UL320_.jpg" },
+  { asin: "B0G6FP4YBR", titulo: "Trading Online: 12 libros en 1", precio: "16,96€", rating: 4.7, img: "https://m.media-amazon.com/images/I/71rPgj1TziL._AC_UL320_.jpg" },
+  { asin: "1720259321", titulo: "Wyckoff en profundidad (Trading)", precio: "20,79€", rating: 4.6, img: "https://m.media-amazon.com/images/I/61syT068V8L._AC_UL320_.jpg" },
+];
+
+const amazonUrl = (asin) => `https://www.amazon.es/dp/${asin}?tag=${CONFIG.AMAZON_TAG}`;
 
 // Intersticial (cada 3 acciones)
 const interstitial = InterstitialAd.createForAdRequest(CONFIG.ADMOB_INTERSTICIAL);
@@ -165,6 +179,33 @@ export default function App() {
         </Text>
       </View>
 
+      {/* 📚 RECOMENDACIONES AFILIADAS */}
+      <Text style={styles.sectionTitle}>📚 Recomendado para ti</Text>
+      <Text style={{ color: '#666', fontSize: 11, marginBottom: 10 }}>
+        Libros que te ayudarán a dominar tus finanzas (compro en Amazon ayuda a mantener la app gratis)
+      </Text>
+      {AFILIADOS.map((libro, i) => (
+        <TouchableOpacity key={i} style={styles.afiliadoCard} onPress={() => {
+          Linking.openURL(amazonUrl(libro.asin)).catch(() =>
+            Alert.alert("Abrir enlace", amazonUrl(libro.asin))
+          );
+        }}>
+          <Image
+            source={{ uri: libro.img }}
+            style={styles.afiliadoImg}
+            defaultSource={{ uri: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=' }}
+          />
+          <View style={styles.afiliadoInfo}>
+            <Text style={styles.afiliadoTitulo}>{libro.titulo}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Text style={styles.afiliadoPrecio}>{libro.precio}</Text>
+              <Text style={styles.afiliadoRating}>⭐ {libro.rating}</Text>
+            </View>
+            <Text style={styles.afiliadoLink}>Ver en Amazon →</Text>
+          </View>
+        </TouchableOpacity>
+      ))}
+
       {/* BANNER ADMOB */}
       <View style={styles.bannerContainer}>
         <BannerAd
@@ -196,4 +237,11 @@ const styles = StyleSheet.create({
   infoBox: { backgroundColor: '#1A1F2E', borderRadius: 10, padding: 15, marginTop: 20, borderWidth: 1, borderColor: '#333' },
   infoText: { color: '#AAA', fontSize: 12, lineHeight: 18 },
   bannerContainer: { alignItems: 'center', marginTop: 20 },
+  afiliadoCard: { flexDirection: 'row', backgroundColor: '#1A1F2E', borderRadius: 12, padding: 10, marginBottom: 10, borderWidth: 1, borderColor: '#333', alignItems: 'center' },
+  afiliadoImg: { width: 50, height: 70, borderRadius: 6, backgroundColor: '#222' },
+  afiliadoInfo: { flex: 1, marginLeft: 12 },
+  afiliadoTitulo: { color: '#FFF', fontSize: 13, fontWeight: 'bold', marginBottom: 4 },
+  afiliadoPrecio: { color: '#00D4AA', fontSize: 14, fontWeight: 'bold' },
+  afiliadoRating: { color: '#FFD700', fontSize: 12 },
+  afiliadoLink: { color: '#0070BA', fontSize: 11, marginTop: 4 },
 });
