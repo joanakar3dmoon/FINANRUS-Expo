@@ -15,14 +15,22 @@
       "bundleIdentifier": "com.finanrus.app"
     },
     "android": {
+      "package": "com.finanrus.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#0D1117"
       },
-      "package": "com.finanrus.app",
-      "versionCode": 1
+      "googleServicesFile": "./google-services.json",
+      "permissions": ["INTERNET", "ACCESS_NETWORK_STATE"]
     },
     "plugins": [
-      "react-native-google-mobile-ads"
-    ]
+      "react-native-google-mobile-ads",
+      "expo-build-properties"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "finanrus"
+      }
+    }
   }
 }
