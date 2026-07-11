@@ -1,0 +1,32 @@
+{
+  "project_info": {
+    "project_number": "000000000000",
+    "project_id": "finanrus-placeholder",
+    "storage_bucket": "finanrus-placeholder.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+        "android_client_info": {
+          "package_name": "com.finanrus.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyPlaceholderKeyForBuild"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
