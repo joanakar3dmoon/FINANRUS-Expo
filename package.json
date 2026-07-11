@@ -9,15 +9,16 @@
     "build": "eas build -p android --profile preview"
   },
   "dependencies": {
-    "expo": "~50.0.0",
-    "react": "18.2.0",
-    "react-native": "0.73.4",
-    "react-native-google-mobile-ads": "^9.1.1",
-    "axios": "^1.6.0",
-    "expo-status-bar": "~1.11.1"
+    "expo": "~52.0.0",
+    "react": "18.3.1",
+    "react-native": "0.76.6",
+    "react-native-google-mobile-ads": "^14.5.0",
+    "expo-build-properties": "~0.13.0",
+    "axios": "^1.7.0",
+    "expo-status-bar": "~2.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.25.0"
   },
   "private": true
 }
