@@ -3,14 +3,18 @@ import { View, Text, Button, TextInput, Alert, StyleSheet, ScrollView } from 're
 import { BannerAd, BannerAdSize, TestIds, InterstitialAd, AdEventType, RewardedAd, RewardedAdEventType } from 'react-native-google-mobile-ads';
 import axios from 'axios';
 
-// ============ 🔑 CAMBIA ESTO CON TUS CLAVES REALES ============
+// ============ 🔑 CONFIG — APIs GRATIS ============
 const CONFIG = {
-  OPENAI_KEY: "TU_OPENAI_KEY_AQUI",
+  // 🆓 OpenRouter gratis — 200 req/día sin tarjeta
+  OPENAI_KEY: "sk-or-v1-",  // <-- REGÍSTRATE en https://openrouter.ai/keys y pega tu key aquí
+  OPENAI_URL: "https://openrouter.ai/api/v1",
+  MODELO: "nvidia/nemotron-3-ultra-550b-a55b:free",  // 🆓 1M contexto, gratis
+
   ADMOB_BANNER: TestIds.BANNER,
   ADMOB_INTERSTICIAL: TestIds.INTERSTITIAL,
   ADMOB_REWARDED: TestIds.REWARDED,
   PAYPAL_EMAIL: "joanlazaro83@gmail.com",
-  BACKEND_URL: "https://tu-backend.railway.app", // Lo cambias cuando subas el backend
+  BACKEND_URL: "https://finanrus-backend.up.railway.app", // Cámbialo cuando subas el backend
 };
 
 // Intersticial (cada 3 acciones)
@@ -32,15 +36,15 @@ export default function App() {
     setLoading(true);
     try {
       const res = await axios.post(
-        'https://api.openai.com/v1/chat/completions',
+        `${CONFIG.OPENAI_URL}/chat/completions`,
         {
-          model: "gpt-4o-mini",
+          model: CONFIG.MODELO,
           messages: [
             { role: "system", content: "Eres FINANRUS, un asistente financiero que ayuda a gestionar ingresos, retiros y suscripciones. Responde breve y útil." },
             { role: "user", content: chat }
           ]
         },
-        { headers: { Authorization: `Bearer ${CONFIG.OPENAI_KEY}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${CONFIG.OPENAI_KEY}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://finanrus.app', 'X-Title': 'FINANRUS' } }
       );
       setRespuesta(res.data.choices[0].message.content);
       contarAccion();
