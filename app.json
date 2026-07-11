@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "FINANRUS",
+    "slug": "finanrus",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#0D1117"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.finanrus.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0D1117"
+      },
+      "package": "com.finanrus.app",
+      "versionCode": 1
+    },
+    "plugins": [
+      "react-native-google-mobile-ads"
+    ]
+  }
+}
