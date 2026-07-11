@@ -7,9 +7,12 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "splash": {
-      "backgroundColor": "#0D1117"
+      "backgroundColor": "#0D1117",
+      "image": "./assets/splash-icon.png"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.finanrus.app"
@@ -21,7 +24,10 @@
         "backgroundColor": "#0D1117"
       },
       "googleServicesFile": "./google-services.json",
-      "permissions": ["INTERNET", "ACCESS_NETWORK_STATE"]
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ]
     },
     "plugins": [
       "react-native-google-mobile-ads",
