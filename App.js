@@ -5,29 +5,31 @@ import axios from 'axios';
 
 import SECRET_CONFIG from './config';
 
-// ============ 🔑 CONFIG — APIs GRATIS ============
+// ============ 🔑 CONFIG ============
 const CONFIG = {
-  // 🆓 OpenRouter gratis — 200 req/día sin tarjeta
+  // 🔗 Backend propio en Render (gratis)
+  BACKEND_URL: "https://finanrus-backend.onrender.com",
+
+  // 🆓 OpenRouter fallback directo (por si el backend duerme)
   OPENAI_KEY: SECRET_CONFIG.OPENAI_KEY || "sk-or-v1-TU_KEY",
   OPENAI_URL: "https://openrouter.ai/api/v1",
-  MODELO: "nvidia/nemotron-3-ultra-550b-a55b:free",  // 🆓 1M contexto, gratis
+  MODELO: "nvidia/nemotron-3-ultra-550b-a55b:free",
 
   // 🆓 Gemini fallback
   GEMINI_KEY: SECRET_CONFIG.GEMINI_KEY || "AIzaSyTU_KEY",
   GEMINI_URL: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
 
-  // ANUNCIOS — ⚠️ TEST IDs (cámbialos en config.js)
+  // ANUNCIOS
   ADMOB_BANNER: "ca-app-pub-3940256099942544/6300978111",
   ADMOB_INTERSTICIAL: "ca-app-pub-3940256099942544/1033173712",
   ADMOB_REWARDED: "ca-app-pub-3940256099942544/5224354917",
 
   PAYPAL_EMAIL: "joanlazaro83@gmail.com",
   PAYPAL_CLIENT_ID: SECRET_CONFIG.PAYPAL_CLIENT_ID || "BAAMzxgBPbp7RG7SlZEOoz1-Wku9akVCrEH6kcwGLhKqpC-VHtcc_IRYBtJF4znmTg80iJIwWul7WDCp4o",
-  BACKEND_URL: "https://finanrus-backend.up.railway.app",
   AMAZON_TAG: "r3dm01-21",
 };
 
-// ============ 📚 AFILIADOS AMAZON (tag: r3dm01-21) ============
+// ============ 📚 AFILIADOS AMAZON ============
 const AFILIADOS = [
   { asin: "8423439062", titulo: "Hazlo bien con tus inversiones", precio: "20,85€", rating: 4.9, img: "https://m.media-amazon.com/images/I/51PsHygbU+L._AC_UL320_.jpg" },
   { asin: "8423440737", titulo: "Educación financiera para la vida real", precio: "20,85€", rating: 4.4, img: "https://m.media-amazon.com/images/I/610kr0uswPL._AC_UL320_.jpg" },
@@ -50,7 +52,7 @@ const rewarded = RewardedAd.createForAdRequest(CONFIG.ADMOB_REWARDED);
 export default function App() {
   const [chat, setChat] = useState("");
   const [respuesta, setRespuesta] = useState("");
-  const [saldo, setSaldo] = useState(2.50); // Saldo inicial demo
+  const [saldo, setSaldo] = useState(2.50);
   const [loading, setLoading] = useState(false);
 
   // ============ AGENTE IA ============
@@ -58,34 +60,47 @@ export default function App() {
     if (!chat.trim()) return;
     setLoading(true);
     try {
-      // 🔄 INTENTO #1: OpenRouter (gratis, 200 req/día)
+      // 🔄 INTENTO #1: Backend propio en Render (GitHub Models → OpenRouter → Gemini)
       try {
         const res = await axios.post(
-          `${CONFIG.OPENAI_URL}/chat/completions`,
-          {
-            model: CONFIG.MODELO,
-            messages: [
-              { role: "system", content: "Eres FINANRUS, un asistente financiero que ayuda a gestionar ingresos, retiros y suscripciones. Responde breve y útil." },
-              { role: "user", content: chat }
-            ]
-          },
-          { headers: { Authorization: `Bearer ${CONFIG.OPENAI_KEY}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://finanrus.app', 'X-Title': 'FINANRUS' } }
+          `${CONFIG.BACKEND_URL}/api/chat`,
+          { message: chat },
+          { headers: { 'Content-Type': 'application/json' }, timeout: 20000 }
         );
-        setRespuesta(res.data.choices[0].message.content);
+        setRespuesta(res.data.reply || res.data.message || "Sin respuesta del backend.");
       } catch (e1) {
-        // 🔄 FALLBACK #2: Gemini (si OpenRouter falla por límite)
+        // 🔄 FALLBACK #2: OpenRouter directo
         try {
           const res2 = await axios.post(
-            `${CONFIG.GEMINI_URL}?key=${CONFIG.GEMINI_KEY}`,
-            { contents: [{ parts: [{ text: `Eres FINANRUS, un asistente financiero. Responde breve y útil. ${chat}` }] }] }
+            `${CONFIG.OPENAI_URL}/chat/completions`,
+            {
+              model: CONFIG.MODELO,
+              messages: [
+                { role: "system", content: "Eres FINANRUS, un asistente financiero que ayuda a gestionar ingresos, retiros y suscripciones. Responde breve y útil." },
+                { role: "user", content: chat }
+              ]
+            },
+            { headers: { Authorization: `Bearer ${CONFIG.OPENAI_KEY}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://finanrus.app', 'X-Title': 'FINANRUS' } }
           );
-          const texto = res2.data?.candidates?.[0]?.content?.parts?.[0]?.text || "Lo siento, no pude procesar eso.";
-          setRespuesta(texto);
+          setRespuesta(res2.data.choices[0].message.content);
         } catch (e2) {
-          setRespuesta("❌ APIs agotadas por hoy. Límite OpenRouter (200/día) y Gemini alcanzado. Vuelve mañana o hazte premium.");
+          // 🔄 FALLBACK #3: Gemini
+          try {
+            const res3 = await axios.post(
+              `${CONFIG.GEMINI_URL}?key=${CONFIG.GEMINI_KEY}`,
+              { contents: [{ parts: [{ text: `Eres FINANRUS, un asistente financiero. Responde breve y útil. ${chat}` }] }] }
+            );
+            const texto = res3.data?.candidates?.[0]?.content?.parts?.[0]?.text || "Lo siento, no pude procesar eso.";
+            setRespuesta(texto);
+          } catch (e3) {
+            setRespuesta("❌ Servicio temporalmente no disponible. Inténtalo en unos minutos.");
+          }
         }
       }
       contarAccion();
+    } catch (err) {
+      setRespuesta("❌ Error inesperado. Inténtalo de nuevo.");
+    }
     setLoading(false);
   };
 
@@ -170,6 +185,7 @@ export default function App() {
         placeholder="Ej: ¿Cuánto saldo tengo?"
         value={chat}
         onChangeText={setChat}
+        placeholderTextColor="#555"
       />
       <Button title={loading ? "Pensando..." : "Enviar a FINANRUS"} onPress={hablarIA} disabled={loading} />
       {respuesta ? (
@@ -203,7 +219,7 @@ export default function App() {
       {/* 📚 RECOMENDACIONES AFILIADAS */}
       <Text style={styles.sectionTitle}>📚 Recomendado para ti</Text>
       <Text style={{ color: '#666', fontSize: 11, marginBottom: 10 }}>
-        Libros que te ayudarán a dominar tus finanzas (compro en Amazon ayuda a mantener la app gratis)
+        Libros que te ayudarán a dominar tus finanzas (comprar en Amazon ayuda a mantener la app gratis)
       </Text>
       {AFILIADOS.map((libro, i) => (
         <TouchableOpacity key={i} style={styles.afiliadoCard} onPress={() => {
